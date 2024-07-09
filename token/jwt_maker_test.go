@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/stretchr/testify/require"
-	"github.com/tijanadmi/moveginmongo/util"
+	"github.com/tijanadmi/movieginmongoapi/util"
 )
 
 func TestJWTMaker(t *testing.T) {

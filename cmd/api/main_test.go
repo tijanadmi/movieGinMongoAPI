@@ -7,11 +7,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
-	db "github.com/tijanadmi/moveginmongo/repository"
-	"github.com/tijanadmi/moveginmongo/util"
+	db "github.com/tijanadmi/movieginmongoapi/repository"
+	"github.com/tijanadmi/movieginmongoapi/util"
 )
 
-func newTestServer(t *testing.T, store *db.MongoClient) *Server {
+func newTestServer(t *testing.T, store db.MongoStore) *Server {
 	config := util.Config{
 		TokenSymmetricKey:   util.RandomString(32),
 		AccessTokenDuration: time.Minute,

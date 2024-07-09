@@ -8,21 +8,21 @@ import (
 
 	swaggerFiles "github.com/swaggo/files"     // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
-	db "github.com/tijanadmi/moveginmongo/repository"
-	"github.com/tijanadmi/moveginmongo/token"
-	"github.com/tijanadmi/moveginmongo/util"
+	db "github.com/tijanadmi/movieginmongoapi/repository"
+	"github.com/tijanadmi/movieginmongoapi/token"
+	"github.com/tijanadmi/movieginmongoapi/util"
 )
 
 // Server serves HTTP requests for our banking service.
 type Server struct {
 	config     util.Config
-	store      *db.MongoClient
+	store      db.MongoStore
 	tokenMaker token.Maker
 	router     *gin.Engine
 }
 
 // NewServer creates a new HTTP server and set up routing.
-func NewServer(config util.Config, store *db.MongoClient) (*Server, error) {
+func NewServer(config util.Config, store db.MongoStore) (*Server, error) {
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create token maker: %w", err)

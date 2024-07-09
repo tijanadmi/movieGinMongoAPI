@@ -8,10 +8,10 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/tijanadmi/moveginmongo/cmd/api"
-	"github.com/tijanadmi/moveginmongo/docs" // Swagger generated files
-	db "github.com/tijanadmi/moveginmongo/repository"
-	"github.com/tijanadmi/moveginmongo/util"
+	"github.com/tijanadmi/movieginmongoapi/cmd/api"
+	"github.com/tijanadmi/movieginmongoapi/docs" // Swagger generated files
+	db "github.com/tijanadmi/movieginmongoapi/repository"
+	"github.com/tijanadmi/movieginmongoapi/util"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -63,8 +63,8 @@ func main() {
 		}
 	}()
 
-	mongoClient := db.NewMongoClient(client)
-	runGinServer(config, mongoClient)
+	store := db.NewMongoStore(client, config.Database)
+	runGinServer(config, store)
 
 }
 
@@ -87,8 +87,8 @@ func connectToMongo(mongoURL string, username string, password string) (*mongo.C
 	return c, nil
 }
 
-func runGinServer(config util.Config, store *db.MongoClient) {
-	server, err := api.NewServer(config, store)
+func runGinServer(config util.Config, store *db.MongoStore) {
+	server, err := api.NewServer(config, *store)
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot create server")
 	}

@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tijanadmi/moveginmongo/models"
-	"github.com/tijanadmi/moveginmongo/util"
+	"github.com/tijanadmi/movieginmongoapi/models"
+	"github.com/tijanadmi/movieginmongoapi/util"
 )
 
 // type createUserRequest struct {
@@ -58,7 +58,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := server.store.Users.GetUserByUsername(ctx, req.Username)
+	user, err := server.store.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 
 		ctx.JSON(http.StatusNotFound, apiErrorResponse{Error: err.Error()})
@@ -127,7 +127,7 @@ func (server *Server) getUserByUsername(ctx *gin.Context) {
 		return
 	}
 
-	user, err := server.store.Users.GetUserByUsername(ctx, req.Username)
+	user, err := server.store.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -152,7 +152,7 @@ func (server *Server) InsertUser(ctx *gin.Context) {
 	}
 
 	user.Password = hashedPassword
-	user1, _ := server.store.Users.GetUserByUsername(ctx, user.Username)
+	user1, _ := server.store.GetUserByUsername(ctx, user.Username)
 
 	if user.Username == user1.Username {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -161,7 +161,7 @@ func (server *Server) InsertUser(ctx *gin.Context) {
 		return
 	}
 
-	if user, err = server.store.Users.InsertUser(ctx, user); err != nil {
+	if user, err = server.store.InsertUser(ctx, user); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})

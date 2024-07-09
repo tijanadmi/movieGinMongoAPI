@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tijanadmi/moveginmongo/models"
-	"github.com/tijanadmi/moveginmongo/util"
+	"github.com/tijanadmi/movieginmongoapi/models"
+	"github.com/tijanadmi/movieginmongoapi/util"
 )
 
 func createRandomMovie(t *testing.T) *models.Movie {
@@ -24,7 +24,7 @@ func createRandomMovie(t *testing.T) *models.Movie {
 		Poster:    util.RandomString(200),
 	}
 
-	movie, err := testStore.Movie.AddMovie(context.Background(), &arg)
+	movie, err := testStore.AddMovie(context.Background(), &arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, movie)
@@ -50,12 +50,12 @@ func TestCreateMovie(t *testing.T) {
 
 func TestListMovie(t *testing.T) {
 
-	movies, err := testStore.Movie.ListMovies(context.Background())
+	movies, err := testStore.ListMovies(context.Background())
 	require.NoError(t, err)
 
 	createRandomMovie(t)
 
-	movies1, err := testStore.Movie.ListMovies(context.Background())
+	movies1, err := testStore.ListMovies(context.Background())
 	require.NoError(t, err)
 	require.NotEmpty(t, movies1)
 
@@ -64,7 +64,7 @@ func TestListMovie(t *testing.T) {
 
 func TestGetMovie(t *testing.T) {
 	movie1 := createRandomMovie(t)
-	movie2, err := testStore.Movie.GetMovie(context.Background(), movie1.ID.Hex())
+	movie2, err := testStore.GetMovie(context.Background(), movie1.ID.Hex())
 	require.NoError(t, err)
 	require.NotEmpty(t, movie2)
 
@@ -95,7 +95,7 @@ func TestUpdateMovie(t *testing.T) {
 		Poster:    movie1.Poster,
 	}
 
-	movie2, err := testStore.Movie.UpdateMovie(context.Background(), movie1.ID.Hex(), arg)
+	movie2, err := testStore.UpdateMovie(context.Background(), movie1.ID.Hex(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, movie2)
@@ -114,10 +114,10 @@ func TestUpdateMovie(t *testing.T) {
 
 func TestDeleteMovie(t *testing.T) {
 	movie1 := createRandomMovie(t)
-	err := testStore.Movie.DeleteMovie(context.Background(), movie1.ID.Hex())
+	err := testStore.DeleteMovie(context.Background(), movie1.ID.Hex())
 	require.NoError(t, err)
 
-	movie2, err := testStore.Movie.GetMovie(context.Background(), movie1.ID.Hex())
+	movie2, err := testStore.GetMovie(context.Background(), movie1.ID.Hex())
 	fmt.Println(movie2, err)
 	require.Error(t, err)
 	require.EqualError(t, err, ErrMovieNotFound.Error())

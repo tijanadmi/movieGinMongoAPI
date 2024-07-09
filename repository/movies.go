@@ -7,31 +7,23 @@ import (
 	"log"
 	"time"
 
-	"github.com/tijanadmi/moveginmongo/models"
+	"github.com/tijanadmi/movieginmongoapi/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // MovieModel sa CRUD operacijama
-// MovieClient is the client responsible for querying MongoDB
-type MovieClient struct {
-	Col *mongo.Collection
-}
 
 var (
 	ErrMovieNotFound = errors.New("movie not found")
 )
 
-func (c *MovieClient) InitMovies(ctx context.Context) {
-	setupIndexes(ctx, c.Col, "title")
-}
-
 // AddMovie adds a new movie to the MongoDB collection
-func (c *MovieClient) AddMovie(ctx context.Context, movie *models.Movie) (*models.Movie, error) {
+func (r *MongoStore) AddMovie(ctx context.Context, movie *models.Movie) (*models.Movie, error) {
 	movie.ID = primitive.NewObjectID()
 	movie.CreatedAt = time.Now()
-	result, err := c.Col.InsertOne(ctx, movie)
+	result, err := r.db.Collection("movies").InsertOne(ctx, movie)
 	if err != nil {
 		log.Print(fmt.Errorf("could not add new movie: %w", err))
 		return nil, err
@@ -42,9 +34,9 @@ func (c *MovieClient) AddMovie(ctx context.Context, movie *models.Movie) (*model
 }
 
 // ListMovies returns all movies from the MongoDB collection
-func (c *MovieClient) ListMovies(ctx context.Context) ([]models.Movie, error) {
+func (r *MongoStore) ListMovies(ctx context.Context) ([]models.Movie, error) {
 	movies := make([]models.Movie, 0)
-	cur, err := c.Col.Find(ctx, bson.M{})
+	cur, err := r.db.Collection("movies").Find(ctx, bson.M{})
 	if err != nil {
 		log.Print(fmt.Errorf("could not get all movies: %w", err))
 		return nil, err
@@ -59,7 +51,7 @@ func (c *MovieClient) ListMovies(ctx context.Context) ([]models.Movie, error) {
 }
 
 // GetMovie returns a movie by ID from the MongoDB collection
-func (c *MovieClient) GetMovie(ctx context.Context, id string) (*models.Movie, error) {
+func (r *MongoStore) GetMovie(ctx context.Context, id string) (*models.Movie, error) {
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -67,7 +59,7 @@ func (c *MovieClient) GetMovie(ctx context.Context, id string) (*models.Movie, e
 	}
 
 	var movie models.Movie
-	result := c.Col.FindOne(ctx, bson.M{"_id": objID})
+	result := r.db.Collection("movies").FindOne(ctx, bson.M{"_id": objID})
 	err = result.Decode(&movie)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -80,12 +72,12 @@ func (c *MovieClient) GetMovie(ctx context.Context, id string) (*models.Movie, e
 }
 
 // UpdateMovie updates a movie by ID in the MongoDB collection
-func (c *MovieClient) UpdateMovie(ctx context.Context, id string, movie models.Movie) (*models.Movie, error) {
+func (r *MongoStore) UpdateMovie(ctx context.Context, id string, movie models.Movie) (*models.Movie, error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
 	}
-	res, err := c.Col.UpdateOne(ctx, bson.M{"_id": objID}, bson.D{
+	res, err := r.db.Collection("movies").UpdateOne(ctx, bson.M{"_id": objID}, bson.D{
 		{"$set", bson.D{
 			{"title", movie.Title},
 			{"duration", movie.Duration},
@@ -112,13 +104,13 @@ func (c *MovieClient) UpdateMovie(ctx context.Context, id string, movie models.M
 }
 
 // DeleteMovie deletes a movie by ID from the MongoDB collection
-func (c *MovieClient) DeleteMovie(ctx context.Context, id string) error {
+func (r *MongoStore) DeleteMovie(ctx context.Context, id string) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
 
-	res, err := c.Col.DeleteOne(ctx, bson.M{"_id": objID})
+	res, err := r.db.Collection("movies").DeleteOne(ctx, bson.M{"_id": objID})
 	if err != nil {
 		log.Print(fmt.Errorf("error deleting the movie with id [%s]: %w", id, err))
 		return err
@@ -132,11 +124,11 @@ func (c *MovieClient) DeleteMovie(ctx context.Context, id string) error {
 }
 
 // GetHall returns a hall by ID from the MongoDB collection
-func (c *MovieClient) SearchMovies(ctx context.Context, movieId string) ([]models.Movie, error) {
+func (r *MongoStore) SearchMovies(ctx context.Context, movieId string) ([]models.Movie, error) {
 	movies := make([]models.Movie, 0)
 	fmt.Println(movieId)
 	// Provera inicijalizacije kolekcije
-	if c.Col == nil {
+	if r.db.Collection("movies") == nil {
 		log.Print(fmt.Errorf("collection is not initialized:"))
 		return nil, fmt.Errorf("collection is not initialized")
 	}
@@ -185,7 +177,7 @@ func (c *MovieClient) SearchMovies(ctx context.Context, movieId string) ([]model
 	}
 
 	// Izvršavanje agregacije
-	cursor, err := c.Col.Aggregate(ctx, pipeline)
+	cursor, err := r.db.Collection("movies").Aggregate(ctx, pipeline)
 	if err != nil {
 		log.Print(fmt.Errorf("could not aggregate movies: %w", err))
 		return nil, err

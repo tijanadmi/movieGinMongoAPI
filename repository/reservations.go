@@ -7,26 +7,21 @@ import (
 	"log"
 	"time"
 
-	"github.com/tijanadmi/moveginmongo/models"
+	"github.com/tijanadmi/movieginmongoapi/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
-
-// RepertoireClient is the client responsible for querying mongodb
-type ReservationClient struct {
-	Col *mongo.Collection
-}
 
 var (
 	ErrReservationNotFound = errors.New("reservation not found")
 )
 
 // AddReservation adds a new reservation to the MongoDB collection
-func (c *ReservationClient) InsertReservation(ctx context.Context, reservation *models.Reservation) (*models.Reservation, error) {
+func (r *MongoStore) InsertReservation(ctx context.Context, reservation *models.Reservation) (*models.Reservation, error) {
 	reservation.ID = primitive.NewObjectID()
 	reservation.CreationDate = time.Now()
-	result, err := c.Col.InsertOne(ctx, reservation)
+	result, err := r.db.Collection("reservations").InsertOne(ctx, reservation)
 	if err != nil {
 		log.Print(fmt.Errorf("could not add new reservation: %w", err))
 		return nil, err
@@ -36,7 +31,7 @@ func (c *ReservationClient) InsertReservation(ctx context.Context, reservation *
 }
 
 // GetReservationById returns a reservations based on its ID
-func (c *ReservationClient) GetReservationById(ctx context.Context, id string) (*models.Reservation, error) {
+func (r *MongoStore) GetReservationById(ctx context.Context, id string) (*models.Reservation, error) {
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -44,7 +39,7 @@ func (c *ReservationClient) GetReservationById(ctx context.Context, id string) (
 	}
 
 	var reservation models.Reservation
-	result := c.Col.FindOne(ctx, bson.M{"_id": objID})
+	result := r.db.Collection("reservations").FindOne(ctx, bson.M{"_id": objID})
 	err = result.Decode(&reservation)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -57,10 +52,10 @@ func (c *ReservationClient) GetReservationById(ctx context.Context, id string) (
 }
 
 // GetReservation returns a all reservation based on username
-func (c *ReservationClient) GetAllReservationsForUser(ctx context.Context, username string) ([]models.Reservation, error) {
+func (r *MongoStore) GetAllReservationsForUser(ctx context.Context, username string) ([]models.Reservation, error) {
 	reservations := make([]models.Reservation, 0)
 
-	cur, err := c.Col.Find(ctx, bson.M{"username": username})
+	cur, err := r.db.Collection("reservations").Find(ctx, bson.M{"username": username})
 	if err != nil {
 		log.Print(fmt.Errorf("could not get all reservations [%s]: %w", username, err))
 		return nil, err
@@ -75,12 +70,12 @@ func (c *ReservationClient) GetAllReservationsForUser(ctx context.Context, usern
 }
 
 // DeleteReservation deletes a reservation based on its ID
-func (c *ReservationClient) DeleteReservation(ctx context.Context, id string) error {
+func (r *MongoStore) DeleteReservation(ctx context.Context, id string) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
-	res, err := c.Col.DeleteOne(ctx, bson.M{"_id": objID})
+	res, err := r.db.Collection("reservations").DeleteOne(ctx, bson.M{"_id": objID})
 	if err != nil {
 		log.Print(fmt.Errorf("error deleting the repertoire with id [%s]: %w", id, err))
 		return err

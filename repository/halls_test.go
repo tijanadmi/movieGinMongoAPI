@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tijanadmi/moveginmongo/models"
-	"github.com/tijanadmi/moveginmongo/util"
+	"github.com/tijanadmi/movieginmongoapi/models"
+	"github.com/tijanadmi/movieginmongoapi/util"
 )
 
 func createRandomHall(t *testing.T) *models.Hall {
@@ -29,7 +29,7 @@ func createRandomHall(t *testing.T) *models.Hall {
 			5},
 	}
 
-	hall, err := testStore.Hall.InsertHall(context.Background(), &arg)
+	hall, err := testStore.InsertHall(context.Background(), &arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, hall)
@@ -50,7 +50,7 @@ func TestCreateHall(t *testing.T) {
 
 func TestGetHall(t *testing.T) {
 	hall1 := createRandomHall(t)
-	hall2, err := testStore.Hall.GetHall(context.Background(), hall1.Name)
+	hall2, err := testStore.GetHall(context.Background(), hall1.Name)
 	require.NoError(t, err)
 	require.NotEmpty(t, hall2)
 
@@ -65,12 +65,12 @@ func TestGetHall(t *testing.T) {
 
 func TestListHall(t *testing.T) {
 
-	halls, err := testStore.Hall.ListHalls(context.Background())
+	halls, err := testStore.ListHalls(context.Background())
 	require.NoError(t, err)
 
 	createRandomHall(t)
 
-	halls1, err := testStore.Hall.ListHalls(context.Background())
+	halls1, err := testStore.ListHalls(context.Background())
 	require.NoError(t, err)
 	require.NotEmpty(t, halls1)
 
@@ -92,7 +92,7 @@ func TestUpdateHall(t *testing.T) {
 		Cols: hall1.Cols,
 	}
 
-	hall2, err := testStore.Hall.UpdateHall(context.Background(), hall1.ID.Hex(), arg)
+	hall2, err := testStore.UpdateHall(context.Background(), hall1.ID.Hex(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, hall2)
@@ -105,10 +105,10 @@ func TestUpdateHall(t *testing.T) {
 
 func TestDeleteHall(t *testing.T) {
 	hall1 := createRandomHall(t)
-	err := testStore.Hall.DeleteHall(context.Background(), hall1.ID.Hex())
+	err := testStore.DeleteHall(context.Background(), hall1.ID.Hex())
 	require.NoError(t, err)
 
-	hall2, err := testStore.Hall.GetHallById(context.Background(), hall1.ID.Hex())
+	hall2, err := testStore.GetHallById(context.Background(), hall1.ID.Hex())
 	fmt.Println(hall2, err)
 	require.Error(t, err)
 	require.EqualError(t, err, ErrHallNotFound.Error())

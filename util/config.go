@@ -22,9 +22,10 @@ type Config struct {
 	EmailSenderName      string        `mapstructure:"EMAIL_SENDER_NAME"`
 	EmailSenderAddress   string        `mapstructure:"EMAIL_SENDER_ADDRESS"`
 	EmailSenderPassword  string        `mapstructure:"EMAIL_SENDER_PASSWORD"`
-	MongoURL             string  	   `mapstructure:"MONGO_URL"`
-	Username             string  	   `mapstructure:"USERNAME"`
-	Password             string  	   `mapstructure:"PASSWORD"`
+	MongoURL             string        `mapstructure:"MONGO_URL"`
+	Username             string        `mapstructure:"USERNAME"`
+	Password             string        `mapstructure:"PASSWORD"`
+	Database             string        `mapstructure:"DATABASE"`
 }
 
 // LoadConfig reads configuration from file or environment variables.

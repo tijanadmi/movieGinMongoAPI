@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tijanadmi/moveginmongo/token"
+	"github.com/tijanadmi/movieginmongoapi/token"
 )
 
 const (

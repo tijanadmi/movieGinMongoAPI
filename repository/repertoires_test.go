@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tijanadmi/moveginmongo/models"
-	"github.com/tijanadmi/moveginmongo/util"
+	"github.com/tijanadmi/movieginmongoapi/models"
+	"github.com/tijanadmi/movieginmongoapi/util"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -30,7 +30,7 @@ func createRandomRepertoire(t *testing.T) *models.Repertoire {
 		NumOfResTickets: 0,
 	}
 
-	repertoire, err := testStore.Repertoire.AddRepertoire(context.Background(), &arg)
+	repertoire, err := testStore.AddRepertoire(context.Background(), &arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, repertoire)
@@ -67,7 +67,7 @@ func createRandomRepertoireForMovie(t *testing.T, movieId primitive.ObjectID) *m
 		NumOfResTickets: 0,
 	}
 
-	repertoire, err := testStore.Repertoire.AddRepertoire(context.Background(), &arg)
+	repertoire, err := testStore.AddRepertoire(context.Background(), &arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, repertoire)
@@ -92,12 +92,12 @@ func TestCreateRepertoire(t *testing.T) {
 
 func TestListRepertoire(t *testing.T) {
 
-	repertoires, err := testStore.Repertoire.ListRepertoires(context.Background())
+	repertoires, err := testStore.ListRepertoires(context.Background())
 	require.NoError(t, err)
 
 	createRandomRepertoire(t)
 
-	repertoires1, err := testStore.Repertoire.ListRepertoires(context.Background())
+	repertoires1, err := testStore.ListRepertoires(context.Background())
 	require.NoError(t, err)
 	require.NotEmpty(t, repertoires1)
 
@@ -106,7 +106,7 @@ func TestListRepertoire(t *testing.T) {
 
 func TestGetRepertoire(t *testing.T) {
 	repertoire1 := createRandomRepertoire(t)
-	repertoire2, err := testStore.Repertoire.GetRepertoire(context.Background(), repertoire1.ID.Hex())
+	repertoire2, err := testStore.GetRepertoire(context.Background(), repertoire1.ID.Hex())
 	require.NoError(t, err)
 	require.NotEmpty(t, repertoire2)
 
@@ -124,7 +124,7 @@ func TestGetRepertoire(t *testing.T) {
 
 func TestGetRepertoireByMovieDateTimeHall(t *testing.T) {
 	repertoire1 := createRandomRepertoire(t)
-	repertoire2, err := testStore.Repertoire.GetRepertoireByMovieDateTimeHall(context.Background(), repertoire1.MovieID.Hex(), repertoire1.Date, repertoire1.Time, repertoire1.Hall)
+	repertoire2, err := testStore.GetRepertoireByMovieDateTimeHall(context.Background(), repertoire1.MovieID.Hex(), repertoire1.Date, repertoire1.Time, repertoire1.Hall)
 	require.NoError(t, err)
 	require.NotEmpty(t, repertoire2)
 
@@ -143,17 +143,17 @@ func TestGetRepertoireByMovieDateTimeHall(t *testing.T) {
 func TestGetAllRepertoireForMovie(t *testing.T) {
 	movie := createRandomMovie(t)
 	repertoire1 := createRandomRepertoireForMovie(t, movie.ID)
-	repertoires, err := testStore.Repertoire.GetAllRepertoireForMovie(context.Background(), movie.ID.Hex(), repertoire1.Date, repertoire1.Date)
+	repertoires, err := testStore.GetAllRepertoireForMovie(context.Background(), movie.ID.Hex(), repertoire1.Date, repertoire1.Date)
 	require.NoError(t, err)
 
 	repertoire11 := createRandomRepertoireForMovie(t, movie.ID)
 	var repertoires2 []models.Repertoire
 	if repertoire1.Date.Before(repertoire11.Date) {
-		repertoires2, err = testStore.Repertoire.GetAllRepertoireForMovie(context.Background(), movie.ID.Hex(), repertoire1.Date, repertoire11.Date)
+		repertoires2, err = testStore.GetAllRepertoireForMovie(context.Background(), movie.ID.Hex(), repertoire1.Date, repertoire11.Date)
 	} else {
-		repertoires2, err = testStore.Repertoire.GetAllRepertoireForMovie(context.Background(), movie.ID.Hex(), repertoire11.Date, repertoire1.Date)
+		repertoires2, err = testStore.GetAllRepertoireForMovie(context.Background(), movie.ID.Hex(), repertoire11.Date, repertoire1.Date)
 	}
-	repertoires2, err = testStore.Repertoire.GetAllRepertoireForMovie(context.Background(), movie.ID.Hex(), repertoire1.Date, repertoire1.Date)
+	repertoires2, err = testStore.GetAllRepertoireForMovie(context.Background(), movie.ID.Hex(), repertoire1.Date, repertoire1.Date)
 	require.NoError(t, err)
 	require.NotEmpty(t, repertoires2)
 
@@ -175,7 +175,7 @@ func TestUpdateRepertoire(t *testing.T) {
 		ReservSeats:     []string{"A1", "A2"},
 	}
 
-	repertoire2, err := testStore.Repertoire.UpdateRepertoire(context.Background(), repertoire1.ID.Hex(), arg)
+	repertoire2, err := testStore.UpdateRepertoire(context.Background(), repertoire1.ID.Hex(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, repertoire2)
@@ -195,10 +195,10 @@ func TestUpdateRepertoire(t *testing.T) {
 
 func TestDeleteRepertoire(t *testing.T) {
 	repertoire1 := createRandomRepertoire(t)
-	err := testStore.Repertoire.DeleteRepertoire(context.Background(), repertoire1.ID.Hex())
+	err := testStore.DeleteRepertoire(context.Background(), repertoire1.ID.Hex())
 	require.NoError(t, err)
 
-	repertoire2, err := testStore.Repertoire.GetRepertoire(context.Background(), repertoire1.ID.Hex())
+	repertoire2, err := testStore.GetRepertoire(context.Background(), repertoire1.ID.Hex())
 	fmt.Println(repertoire2, err)
 	require.Error(t, err)
 	require.EqualError(t, err, ErrRepertoireNotFound.Error())
@@ -207,10 +207,10 @@ func TestDeleteRepertoire(t *testing.T) {
 
 func TestDeleteRepertoireForMovie(t *testing.T) {
 	repertoire1 := createRandomRepertoire(t)
-	err := testStore.Repertoire.DeleteRepertoireForMovie(context.Background(), repertoire1.MovieID.Hex())
+	err := testStore.DeleteRepertoireForMovie(context.Background(), repertoire1.MovieID.Hex())
 	require.NoError(t, err)
 
-	repertoire2, err := testStore.Repertoire.GetRepertoire(context.Background(), repertoire1.ID.Hex())
+	repertoire2, err := testStore.GetRepertoire(context.Background(), repertoire1.ID.Hex())
 	fmt.Println(repertoire2, err)
 	require.Error(t, err)
 	require.EqualError(t, err, ErrRepertoireNotFound.Error())

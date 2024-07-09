@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tijanadmi/moveginmongo/models"
+	"github.com/tijanadmi/movieginmongoapi/models"
 )
 
 // listHalls godoc
@@ -20,7 +20,7 @@ import (
 // @Router /halls [get]
 func (server *Server) listHalls(ctx *gin.Context) {
 
-	halls, err := server.store.Hall.ListHalls(ctx)
+	halls, err := server.store.ListHalls(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -44,7 +44,7 @@ func (server *Server) listHalls(ctx *gin.Context) {
 func (server *Server) searchHall(ctx *gin.Context) {
 
 	name := ctx.Param("name")
-	halls, err := server.store.Hall.GetHall(ctx, name)
+	halls, err := server.store.GetHall(ctx, name)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -72,7 +72,7 @@ func (server *Server) InsertHall(ctx *gin.Context) {
 		return
 	}
 
-	hall, err := server.store.Hall.InsertHall(ctx, hall)
+	hall, err := server.store.InsertHall(ctx, hall)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -102,7 +102,7 @@ func (server *Server) UpdateHall(ctx *gin.Context) {
 		return
 	}
 
-	modifiedHall, err := server.store.Hall.UpdateHall(ctx, id, *hall)
+	modifiedHall, err := server.store.UpdateHall(ctx, id, *hall)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -126,7 +126,7 @@ func (server *Server) UpdateHall(ctx *gin.Context) {
 func (server *Server) DeleteHall(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	err := server.store.Hall.DeleteHall(ctx, id)
+	err := server.store.DeleteHall(ctx, id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return

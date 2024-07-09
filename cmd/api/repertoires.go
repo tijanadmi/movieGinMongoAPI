@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tijanadmi/moveginmongo/models"
-	"github.com/tijanadmi/moveginmongo/util"
+	"github.com/tijanadmi/movieginmongoapi/models"
+	"github.com/tijanadmi/movieginmongoapi/util"
 )
 
 // GetRepertoire godoc
@@ -25,7 +25,7 @@ import (
 func (server *Server) GetRepertoire(ctx *gin.Context) {
 
 	id := ctx.Param("id")
-	repertoire, err := server.store.Repertoire.GetRepertoire(ctx, id)
+	repertoire, err := server.store.GetRepertoire(ctx, id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -68,7 +68,7 @@ func (server *Server) GetAllRepertoireForMovie(ctx *gin.Context) {
 		return
 	}
 
-	repertoires, err := server.store.Repertoire.GetAllRepertoireForMovie(ctx, movieId, startDateValue, endDateValue)
+	repertoires, err := server.store.GetAllRepertoireForMovie(ctx, movieId, startDateValue, endDateValue)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -90,7 +90,7 @@ func (server *Server) GetAllRepertoireForMovie(ctx *gin.Context) {
 // @Router /repertoires [get]
 func (server *Server) ListRepertoires(ctx *gin.Context) {
 
-	repertoires, err := server.store.Repertoire.ListRepertoires(ctx)
+	repertoires, err := server.store.ListRepertoires(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -128,7 +128,7 @@ func (server *Server) AddRepertoire(ctx *gin.Context) {
 	// Update the date field with the parsed time.Time value
 	repertoire.Date = dateValue
 
-	repertoire, err = server.store.Repertoire.AddRepertoire(ctx, repertoire)
+	repertoire, err = server.store.AddRepertoire(ctx, repertoire)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -157,7 +157,7 @@ func (server *Server) UpdateRepertoire(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, apiErrorResponse{Error: fmt.Sprintf(" invalid input: %s", err.Error())})
 		return
 	}
-	repertoire, err := server.store.Repertoire.UpdateRepertoire(ctx, id, *repertoire)
+	repertoire, err := server.store.UpdateRepertoire(ctx, id, *repertoire)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -181,7 +181,7 @@ func (server *Server) UpdateRepertoire(ctx *gin.Context) {
 func (server *Server) DeleteRepertoire(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	err := server.store.Repertoire.DeleteRepertoire(ctx, id)
+	err := server.store.DeleteRepertoire(ctx, id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -205,7 +205,7 @@ func (server *Server) DeleteRepertoire(ctx *gin.Context) {
 func (server *Server) DeleteRepertoireForMovie(ctx *gin.Context) {
 	movieId := ctx.Query("movie_id")
 
-	err := server.store.Repertoire.DeleteRepertoireForMovie(ctx, movieId)
+	err := server.store.DeleteRepertoireForMovie(ctx, movieId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return

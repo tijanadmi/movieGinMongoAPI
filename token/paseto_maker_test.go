@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tijanadmi/moveginmongo/util"
+	"github.com/tijanadmi/movieginmongoapi/util"
 )
 
 func TestPasetoMaker(t *testing.T) {

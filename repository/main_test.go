@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tijanadmi/moveginmongo/util"
+	"github.com/tijanadmi/movieginmongoapi/util"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var testStore *MongoClient
+var testStore *MongoStore
 
 func TestMain(m *testing.M) {
 
@@ -35,6 +35,8 @@ func TestMain(m *testing.M) {
 		log.Fatal("cannot ping MongoDB:", err)
 	}
 
-	testStore = NewMongoClient(client)
+	// create a repository
+
+	testStore = NewMongoStore(client, config.Database)
 	os.Exit(m.Run())
 }

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tijanadmi/moveginmongo/models"
+	"github.com/tijanadmi/movieginmongoapi/models"
 )
 
 // searchMovies godoc
@@ -23,7 +23,7 @@ import (
 func (server *Server) searchMovies(ctx *gin.Context) {
 
 	movieId := ctx.Param("id")
-	movies, err := server.store.Movie.SearchMovies(ctx, movieId)
+	movies, err := server.store.SearchMovies(ctx, movieId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -45,7 +45,7 @@ func (server *Server) searchMovies(ctx *gin.Context) {
 // @Router /movies [get]
 func (server *Server) listMovies(ctx *gin.Context) {
 
-	movies, err := server.store.Movie.SearchMovies(ctx, "0")
+	movies, err := server.store.SearchMovies(ctx, "0")
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -73,7 +73,7 @@ func (server *Server) InsertMovie(ctx *gin.Context) {
 		return
 	}
 
-	movie, err := server.store.Movie.AddMovie(ctx, movie)
+	movie, err := server.store.AddMovie(ctx, movie)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -103,7 +103,7 @@ func (server *Server) UpdateMovie(ctx *gin.Context) {
 		return
 	}
 
-	modifiedMovie, err := server.store.Movie.UpdateMovie(ctx, id, *movie)
+	modifiedMovie, err := server.store.UpdateMovie(ctx, id, *movie)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
@@ -127,7 +127,7 @@ func (server *Server) UpdateMovie(ctx *gin.Context) {
 func (server *Server) DeleteMovie(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	err := server.store.Movie.DeleteMovie(ctx, id)
+	err := server.store.DeleteMovie(ctx, id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return

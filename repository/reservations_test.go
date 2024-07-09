@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tijanadmi/moveginmongo/models"
+	"github.com/tijanadmi/movieginmongoapi/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -27,7 +27,7 @@ func createRandomReservation(t *testing.T) *models.Reservation {
 		ReservSeats:   []string{"A1", "A2"},
 	}
 
-	reservation, err := testStore.Reservation.InsertReservation(context.Background(), &arg)
+	reservation, err := testStore.InsertReservation(context.Background(), &arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, reservation)
@@ -68,7 +68,7 @@ func createRandomReservationForUser(t *testing.T, userID primitive.ObjectID, use
 		ReservSeats:   []string{"A1", "A2"},
 	}
 
-	reservation, err := testStore.Reservation.InsertReservation(context.Background(), &arg)
+	reservation, err := testStore.InsertReservation(context.Background(), &arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, reservation)
@@ -96,12 +96,12 @@ func TestCreateReservationForUser(t *testing.T) {
 
 func TestGetAllReservationsForUser(t *testing.T) {
 	user := createRandomUser(t)
-	reservations, err := testStore.Reservation.GetAllReservationsForUser(context.Background(), user.Username)
+	reservations, err := testStore.GetAllReservationsForUser(context.Background(), user.Username)
 	require.NoError(t, err)
 
 	createRandomReservationForUser(t, user.ID, user.Username)
 
-	reservations1, err := testStore.Reservation.GetAllReservationsForUser(context.Background(), user.Username)
+	reservations1, err := testStore.GetAllReservationsForUser(context.Background(), user.Username)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, reservations1)
@@ -111,7 +111,7 @@ func TestGetAllReservationsForUser(t *testing.T) {
 
 func TestGetReservation(t *testing.T) {
 	reservation1 := createRandomReservation(t)
-	reservation2, err := testStore.Reservation.GetReservationById(context.Background(), reservation1.ID.Hex())
+	reservation2, err := testStore.GetReservationById(context.Background(), reservation1.ID.Hex())
 	require.NoError(t, err)
 	require.NotEmpty(t, reservation2)
 
@@ -131,10 +131,10 @@ func TestGetReservation(t *testing.T) {
 
 func TestDeleteReservation(t *testing.T) {
 	reservation1 := createRandomReservation(t)
-	err := testStore.Reservation.DeleteReservation(context.Background(), reservation1.ID.Hex())
+	err := testStore.DeleteReservation(context.Background(), reservation1.ID.Hex())
 	require.NoError(t, err)
 
-	Reservation2, err := testStore.Reservation.GetReservationById(context.Background(), reservation1.ID.Hex())
+	Reservation2, err := testStore.GetReservationById(context.Background(), reservation1.ID.Hex())
 	fmt.Println(Reservation2, err)
 	require.Error(t, err)
 	require.EqualError(t, err, ErrReservationNotFound.Error())

@@ -1,7 +1,6 @@
 package util
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -48,13 +47,4 @@ func RandomMoney() int64 {
 // RandomEmail generates a random email
 func RandomEmail() string {
 	return fmt.Sprintf("%s@email.com", RandomString(6))
-}
-
-func ParseDate(dateString string) (time.Time, error) {
-	layout := "2006-01-02"
-	date, err := time.Parse(layout, dateString)
-	if err != nil {
-		return time.Time{}, errors.New("invalid date format, should be YYYY-MM-DD")
-	}
-	return date, nil
 }

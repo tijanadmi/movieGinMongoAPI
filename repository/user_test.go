@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tijanadmi/moveginmongo/models"
-	"github.com/tijanadmi/moveginmongo/util"
+	"github.com/tijanadmi/movieginmongoapi/models"
+	"github.com/tijanadmi/movieginmongoapi/util"
 )
 
 func createRandomUser(t *testing.T) *models.User {
@@ -20,7 +20,7 @@ func createRandomUser(t *testing.T) *models.User {
 		Roles:    []string{"user", "admin"},
 	}
 
-	user, err := testStore.Users.InsertUser(context.Background(), &arg)
+	user, err := testStore.InsertUser(context.Background(), &arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
 
@@ -37,7 +37,7 @@ func TestCreateUser(t *testing.T) {
 
 func TestGetUser(t *testing.T) {
 	user1 := createRandomUser(t)
-	user2, err := testStore.Users.GetUserByUsername(context.Background(), user1.Username)
+	user2, err := testStore.GetUserByUsername(context.Background(), user1.Username)
 	require.NoError(t, err)
 	require.NotEmpty(t, user2)
 
