@@ -66,7 +66,7 @@ func (server *Server) AddReservation(ctx *gin.Context) {
 		Hall:        req.Hall,
 		ReservSeats: req.ReservSeats,
 	}
-	err = server.store.AddReservation(ctx, req1)
+	_, err = server.store.AddReservation(ctx, req1)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})

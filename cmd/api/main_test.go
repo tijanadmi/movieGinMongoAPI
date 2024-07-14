@@ -11,7 +11,7 @@ import (
 	"github.com/tijanadmi/movieginmongoapi/util"
 )
 
-func newTestServer(t *testing.T, store db.MongoStore) *Server {
+func newTestServer(t *testing.T, store db.Store) *Server {
 	config := util.Config{
 		TokenSymmetricKey:   util.RandomString(32),
 		AccessTokenDuration: time.Minute,

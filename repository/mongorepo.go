@@ -9,11 +9,10 @@ type MongoStore struct {
 	db     *mongo.Database
 }
 
-func NewMongoStore(client *mongo.Client, dbName string) *MongoStore {
+func NewStore(client *mongo.Client, dbName string) Store {
 	database := client.Database(dbName)
 	return &MongoStore{
 		client: client,
 		db:     database,
 	}
 }
-

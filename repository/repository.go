@@ -9,9 +9,9 @@ import (
 
 type Store interface {
 	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
-	InsertUser(ctx context.Context, user *models.User)
+	InsertUser(ctx context.Context, user *models.User) (*models.User, error)
 
-	InsertHall(ctx context.Context, hall *models.Hall)
+	InsertHall(ctx context.Context, hall *models.Hall) (*models.Hall, error)
 	ListHalls(ctx context.Context) ([]models.Hall, error)
 	GetHall(ctx context.Context, name string) ([]models.Hall, error)
 	GetHallById(ctx context.Context, id string) (*models.Hall, error)
@@ -39,6 +39,6 @@ type Store interface {
 	GetAllReservationsForUser(ctx context.Context, username string) ([]models.Reservation, error)
 	DeleteReservation(ctx context.Context, id string) error
 
-	AddReservation(ctx context.Context, req AddReservationParams) error
+	AddReservation(ctx context.Context, req AddReservationParams) (*models.Reservation, error)
 	CancelReservation(ctx context.Context, resId string) error
 }

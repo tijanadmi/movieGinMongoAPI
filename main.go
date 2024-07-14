@@ -63,7 +63,7 @@ func main() {
 		}
 	}()
 
-	store := db.NewMongoStore(client, config.Database)
+	store := db.NewStore(client, config.Database)
 	runGinServer(config, store)
 
 }
@@ -87,8 +87,8 @@ func connectToMongo(mongoURL string, username string, password string) (*mongo.C
 	return c, nil
 }
 
-func runGinServer(config util.Config, store *db.MongoStore) {
-	server, err := api.NewServer(config, *store)
+func runGinServer(config util.Config, store db.Store) {
+	server, err := api.NewServer(config, store)
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot create server")
 	}

@@ -6,38 +6,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/tijanadmi/movieginmongoapi/models"
 	"github.com/tijanadmi/movieginmongoapi/util"
+	"go.mongodb.org/mongo-driver/mongo"
 )
-
-// type createUserRequest struct {
-// 	Username string `json:"username" binding:"required,alphanum"`
-// 	Password string `json:"password" binding:"required,min=6"`
-// 	FullName string `json:"full_name" binding:"required"`
-// 	Email    string `json:"email" binding:"required,email"`
-// }
-
-// type userResponse struct {
-// 	Username string `json:"username"`
-// }
 
 func newUserResponse(user *models.User) userResponse {
 	return userResponse{
 		Username: user.Username,
 	}
 }
-
-// type loginUserRequest struct {
-// 	Username string `json:"username" binding:"required,alphanum"`
-// 	Password string `json:"password" binding:"required,min=6"`
-// }
-
-// type loginUserResponse struct {
-// 	SessionID             uuid.UUID    `json:"session_id"`
-// 	AccessToken           string       `json:"access_token"`
-// 	AccessTokenExpiresAt  time.Time    `json:"access_token_expires_at"`
-// 	RefreshToken          string       `json:"refresh_token"`
-// 	RefreshTokenExpiresAt time.Time    `json:"refresh_token_expires_at"`
-// 	User                  userResponse `json:"user"`
-// }
 
 // Paths Information
 
@@ -58,10 +34,19 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
+	if !util.IsValidUsername(req.Username) {
+		ctx.JSON(http.StatusBadRequest, apiErrorResponse{Error: "invalid username"})
+		return
+	}
+
+
 	user, err := server.store.GetUserByUsername(ctx, req.Username)
 	if err != nil {
-
-		ctx.JSON(http.StatusNotFound, apiErrorResponse{Error: err.Error()})
+		if err == mongo.ErrNoDocuments {
+			ctx.JSON(http.StatusNotFound, apiErrorResponse{Error: "user not found"})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
+		}
 		return
 	}
 
@@ -74,7 +59,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 	accessToken, accessPayload, err := server.tokenMaker.CreateToken(
 		user.Username,
 		/*user.Role,*/
-		"depositor",
+		"user",
 		server.config.AccessTokenDuration,
 	)
 	if err != nil {
@@ -85,7 +70,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(
 		user.Username,
 		//user.Role,
-		"depositor",
+		"user",
 		server.config.RefreshTokenDuration,
 	)
 	if err != nil {
@@ -93,22 +78,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	/*session, err := server.store.CreateSession(ctx, db.CreateSessionParams{
-		ID:           refreshPayload.ID,
-		Username:     user.Username,
-		RefreshToken: refreshToken,
-		UserAgent:    ctx.Request.UserAgent(),
-		ClientIp:     ctx.ClientIP(),
-		IsBlocked:    false,
-		ExpiresAt:    refreshPayload.ExpiredAt,
-	})
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}*/
-
 	rsp := loginUserResponse{
-		//SessionID:             session.ID,
 		AccessToken:           accessToken,
 		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
 		RefreshToken:          refreshToken,
@@ -152,14 +122,14 @@ func (server *Server) InsertUser(ctx *gin.Context) {
 	}
 
 	user.Password = hashedPassword
-	user1, _ := server.store.GetUserByUsername(ctx, user.Username)
+	/*user1, _ := server.store.GetUserByUsername(ctx, user.Username)
 
 	if user.Username == user1.Username {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "User already exists",
 		})
 		return
-	}
+	}*/
 
 	if user, err = server.store.InsertUser(ctx, user); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{

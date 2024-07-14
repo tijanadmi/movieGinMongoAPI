@@ -1,11 +1,44 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tijanadmi/movieginmongoapi/models"
+	"github.com/tijanadmi/movieginmongoapi/repository"
 )
+
+// gethHallById godoc
+// @Security bearerAuth
+// @Summary Get existing hall
+// @Description Get the existing hall
+// @ID getHallById
+// @Accept  json
+// @Produce  json
+// @Param  id path string true "Hall id"
+// @Success 200 models.Hall
+// @Failure 400 {object} apiErrorResponse
+// @Failure 401 {object} apiErrorResponse
+// @Router /halls/{id} [get]
+func (server *Server) getHallById(ctx *gin.Context) {
+
+	id := ctx.Param("id")
+
+	hall, err := server.store.GetHallById(ctx, id)
+
+	if err != nil {
+		if errors.Is(err, repository.ErrRecordNotFound) {
+			ctx.JSON(http.StatusNotFound, apiErrorResponse{Error: err.Error()})
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, hall)
+}
 
 // listHalls godoc
 // @Security bearerAuth

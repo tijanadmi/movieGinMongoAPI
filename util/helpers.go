@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"regexp"
 	"time"
 )
 
@@ -26,4 +27,10 @@ func Difference(slice1, slice2 []string) []string {
 		}
 	}
 	return diff
+}
+
+func IsValidUsername(username string) bool {
+	// adjust the regex to fit the rules for a valid username
+	re := regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
+	return re.MatchString(username)
 }

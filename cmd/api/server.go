@@ -16,13 +16,13 @@ import (
 // Server serves HTTP requests for our banking service.
 type Server struct {
 	config     util.Config
-	store      db.MongoStore
+	store      db.Store
 	tokenMaker token.Maker
 	router     *gin.Engine
 }
 
 // NewServer creates a new HTTP server and set up routing.
-func NewServer(config util.Config, store db.MongoStore) (*Server, error) {
+func NewServer(config util.Config, store db.Store) (*Server, error) {
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create token maker: %w", err)
@@ -59,13 +59,20 @@ func (server *Server) setupRouter() {
 
 	router.POST("/tokens/renew_access", server.renewAccessToken)
 
+	// router.GET("/halls/:id", server.getHallById)
+	// router.GET("/halls", server.listHalls)
+	// router.POST("/halls", server.InsertHall)
+	// router.PUT("/halls/:id", server.UpdateHall)
+	// router.DELETE("/halls/:id", server.DeleteHall)
+	// router.GET("/searchhalls/:name", server.searchHall)
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
+	authRoutes.GET("/halls/:id", server.getHallById)
 	authRoutes.GET("/halls", server.listHalls)
-	authRoutes.GET("/halls/:name", server.searchHall)
-	authRoutes.PUT("/halls/:id", server.UpdateHall)
 	authRoutes.POST("/halls", server.InsertHall)
+	authRoutes.PUT("/halls/:id", server.UpdateHall)
 	authRoutes.DELETE("/halls/:id", server.DeleteHall)
+	authRoutes.GET("/searchhalls/:name", server.searchHall)
 
 	authRoutes.GET("/movies/:id", server.searchMovies)
 	authRoutes.GET("/movies", server.listMovies)

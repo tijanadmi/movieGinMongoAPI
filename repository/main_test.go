@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var testStore *MongoStore
+var testStore Store
 
 func TestMain(m *testing.M) {
 
@@ -37,6 +37,6 @@ func TestMain(m *testing.M) {
 
 	// create a repository
 
-	testStore = NewMongoStore(client, config.Database)
+	testStore = NewStore(client, config.Database)
 	os.Exit(m.Run())
 }
