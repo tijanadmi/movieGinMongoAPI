@@ -422,7 +422,7 @@ func (mr *MockStoreMockRecorder) UpdateHall(arg0, arg1, arg2 interface{}) *gomoc
 }
 
 // UpdateMovie mocks base method.
-func (m *MockStore) UpdateMovie(arg0 context.Context, arg1 string, arg2 models.Movie) (*models.Movie, error) {
+func (m *MockStore) UpdateMovie(arg0 context.Context, arg1 string, arg2 *models.Movie) (*models.Movie, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateMovie", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*models.Movie)

@@ -21,7 +21,7 @@ type Store interface {
 	AddMovie(ctx context.Context, movie *models.Movie) (*models.Movie, error)
 	ListMovies(ctx context.Context) ([]models.Movie, error)
 	GetMovie(ctx context.Context, id string) (*models.Movie, error)
-	UpdateMovie(ctx context.Context, id string, movie models.Movie) (*models.Movie, error)
+	UpdateMovie(ctx context.Context, id string, movie *models.Movie) (*models.Movie, error)
 	DeleteMovie(ctx context.Context, id string) error
 	SearchMovies(ctx context.Context, movieId string) ([]models.Movie, error)
 

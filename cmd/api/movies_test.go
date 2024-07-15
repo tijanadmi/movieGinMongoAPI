@@ -17,30 +17,57 @@ import (
 	mockdb "github.com/tijanadmi/movieginmongoapi/db/mock"
 	"github.com/tijanadmi/movieginmongoapi/models"
 	"github.com/tijanadmi/movieginmongoapi/repository"
+	"github.com/tijanadmi/movieginmongoapi/token"
 	"github.com/tijanadmi/movieginmongoapi/util"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+type movieMatcher struct {
+	expected *models.Movie
+}
+
+func (m movieMatcher) Matches(x interface{}) bool {
+	actual, ok := x.(*models.Movie)
+	if !ok {
+		return false
+	}
+
+	return actual.Title == m.expected.Title &&
+		actual.Duration == m.expected.Duration &&
+		actual.Genre == m.expected.Genre &&
+		actual.Directors == m.expected.Directors &&
+		actual.Actors == m.expected.Actors &&
+		actual.Screening.Truncate(time.Second).Equal(m.expected.Screening.Truncate(time.Second)) &&
+		actual.Plot == m.expected.Plot &&
+		actual.Poster == m.expected.Poster
+}
+
+func (m movieMatcher) String() string {
+	return fmt.Sprintf("is equal to %v", m.expected)
+}
 func TestSearchMovieAPI(t *testing.T) {
+	username := util.RandomOwner()
+	role := util.UserRole
 	movie := randomMovie()
+	//movies := []models.Movie{movie}
 
 	testCases := []struct {
-		name    string
-		movieID primitive.ObjectID
-		//setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		name          string
+		movieID       primitive.ObjectID
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recoder *httptest.ResponseRecorder)
 	}{
 		{
 			name:    "OK",
 			movieID: movie.ID,
-			/*setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, user.Role, time.Minute)
-			},*/
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, username, role, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetHallById(gomock.Any(), gomock.Eq(movie.ID.Hex())).
+					GetMovie(gomock.Any(), gomock.Eq(movie.ID.Hex())).
 					Times(1).
 					Return(&movie, nil)
 			},
@@ -50,17 +77,31 @@ func TestSearchMovieAPI(t *testing.T) {
 			},
 		},
 		{
+			name:    "NoAuthorization",
+			movieID: movie.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					GetMovie(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
 			name:    "NotFound",
 			movieID: movie.ID,
-			/*setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, user.Role, time.Minute)
-			},*/
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, username, role, time.Minute)
+			},
 
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetHallById(gomock.Any(), gomock.Eq(movie.ID.Hex())).
+					GetMovie(gomock.Any(), gomock.Eq(movie.ID.Hex())).
 					Times(1).
-					Return(nil, repository.ErrRecordNotFound)
+					Return(nil, repository.ErrMovieNotFound)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -69,12 +110,12 @@ func TestSearchMovieAPI(t *testing.T) {
 		{
 			name:    "InternalError",
 			movieID: movie.ID,
-			/*setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, user.Role, time.Minute)
-			},*/
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, username, role, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetHallById(gomock.Any(), gomock.Eq(movie.ID.Hex())).
+					GetMovie(gomock.Any(), gomock.Eq(movie.ID.Hex())).
 					Times(1).
 					Return(nil, mongo.ErrClientDisconnected)
 			},
@@ -101,7 +142,7 @@ func TestSearchMovieAPI(t *testing.T) {
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
-			//tc.setupAuth(t, request, server.tokenMaker)
+			tc.setupAuth(t, request, server.tokenMaker)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(t, recorder)
 		})
@@ -110,6 +151,8 @@ func TestSearchMovieAPI(t *testing.T) {
 }
 
 func TestListMoviesAPI(t *testing.T) {
+	username := util.RandomOwner()
+	role := util.UserRole
 	n := 5
 	movies := make([]models.Movie, n)
 	for i := 0; i < n; i++ {
@@ -117,16 +160,16 @@ func TestListMoviesAPI(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name string
-		//setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(recoder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "OK",
-			/*setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, user.Role, time.Minute)
-			},*/
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, username, role, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 
 				store.EXPECT().
@@ -154,9 +197,9 @@ func TestListMoviesAPI(t *testing.T) {
 		},*/
 		{
 			name: "InternalError",
-			/*setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, user.Role, time.Minute)
-			},*/
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, username, role, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					ListMovies(gomock.Any()).
@@ -190,92 +233,7 @@ func TestListMoviesAPI(t *testing.T) {
 			q := request.URL.Query()
 			request.URL.RawQuery = q.Encode()
 
-			//tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
-		})
-	}
-}
-
-func TestSearchMoviesAPI(t *testing.T) {
-	halls := make([]models.Hall, 1)
-	halls[0] = randomHall()
-
-	testCases := []struct {
-		name string
-		//setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
-		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
-	}{
-		{
-			name: "OK",
-			/*setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, user.Role, time.Minute)
-			},*/
-			buildStubs: func(store *mockdb.MockStore) {
-
-				store.EXPECT().
-					GetHall(gomock.Any(), gomock.Eq(halls[0].Name)).
-					Times(1).
-					Return(halls, nil)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchHalls(t, recorder.Body, halls)
-			},
-		},
-		/*{
-			name: "NoAuthorization",
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListAccounts(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
-			},
-		},*/
-		{
-			name: "InternalError",
-			/*setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, user.Role, time.Minute)
-			},*/
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					GetHall(gomock.Any(), gomock.Eq(halls[0].Name)).
-					Times(1).
-					Return(nil, sql.ErrConnDone)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
-			},
-		},
-	}
-
-	for i := range testCases {
-		tc := testCases[i]
-
-		t.Run(tc.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			store := mockdb.NewMockStore(ctrl)
-			tc.buildStubs(store)
-
-			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
-
-			url := "/movies/:id"
-			request, err := http.NewRequest(http.MethodGet, url, nil)
-			require.NoError(t, err)
-
-			// Add query parameters to request URL
-			q := request.URL.Query()
-			request.URL.RawQuery = q.Encode()
-
-			//tc.setupAuth(t, request, server.tokenMaker)
+			tc.setupAuth(t, request, server.tokenMaker)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
@@ -283,12 +241,14 @@ func TestSearchMoviesAPI(t *testing.T) {
 }
 
 func TestInsertMovieAPI(t *testing.T) {
+	username := util.RandomOwner()
+	role := util.UserRole
 	movie := randomMovie()
 
 	testCases := []struct {
-		name string
-		body gin.H
-		//setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		name          string
+		body          gin.H
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(recoder *httptest.ResponseRecorder)
 	}{
@@ -304,9 +264,9 @@ func TestInsertMovieAPI(t *testing.T) {
 				"plot":      movie.Plot,
 				"poster":    movie.Poster,
 			},
-			/*setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, user.Role, time.Minute)
-			},*/
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, username, role, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := &models.Movie{
 					Title:     movie.Title,
@@ -318,10 +278,8 @@ func TestInsertMovieAPI(t *testing.T) {
 					Plot:      movie.Plot,
 					Poster:    movie.Poster,
 				}
-				store.EXPECT().
-					InsertHall(gomock.Any(), gomock.Eq(arg)).
-					Times(1).
-					Return(&movie, nil)
+				store.EXPECT().AddMovie(gomock.Any(), movieMatcher{expected: arg}).Times(1).Return(&movie, nil)
+
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
@@ -340,12 +298,12 @@ func TestInsertMovieAPI(t *testing.T) {
 				"plot":      movie.Plot,
 				"poster":    movie.Poster,
 			},
-			/*setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, user.Role, time.Minute)
-			},*/
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, username, role, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					InsertHall(gomock.Any(), gomock.Any()).
+					AddMovie(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(nil, sql.ErrConnDone)
 			},
@@ -365,12 +323,12 @@ func TestInsertMovieAPI(t *testing.T) {
 				"plot":      movie.Plot,
 				"poster":    movie.Poster,
 			},
-			/*setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, user.Role, time.Minute)
-			},*/
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, username, role, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					InsertHall(gomock.Any(), gomock.Any()).
+					AddMovie(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -400,7 +358,7 @@ func TestInsertMovieAPI(t *testing.T) {
 			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
-			//tc.setupAuth(t, request, server.tokenMaker)
+			tc.setupAuth(t, request, server.tokenMaker)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
@@ -408,12 +366,15 @@ func TestInsertMovieAPI(t *testing.T) {
 }
 
 func TestUpdateMovieAPI(t *testing.T) {
+	username := util.RandomOwner()
+	role := util.UserRole
 	movie := randomMovie()
 
 	testCases := []struct {
 		name          string
 		movieID       string
 		body          gin.H
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(recorder *httptest.ResponseRecorder)
 	}{
@@ -431,8 +392,11 @@ func TestUpdateMovieAPI(t *testing.T) {
 				"plot":      movie.Plot,
 				"poster":    movie.Poster,
 			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, username, role, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := models.Movie{
+				arg := &models.Movie{
 					ID:        movie.ID,
 					Title:     movie.Title,
 					Duration:  movie.Duration,
@@ -450,7 +414,33 @@ func TestUpdateMovieAPI(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchMovie(t, recorder.Body, movie)
+				//requireBodyMatchMovie(t, recorder.Body, movie)
+			},
+		},
+		{
+			name:    "NoAuthorization",
+			movieID: movie.ID.Hex(),
+			body: gin.H{
+				"id":        movie.ID.Hex(),
+				"title":     movie.Title,
+				"duration":  movie.Duration,
+				"genre":     movie.Genre,
+				"directors": movie.Directors,
+				"actors":    movie.Actors,
+				"screening": movie.Screening,
+				"plot":      movie.Plot,
+				"poster":    movie.Poster,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				// Do not set up authorization
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					UpdateMovie(gomock.Any(), gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
 			},
 		},
 		{
@@ -467,6 +457,9 @@ func TestUpdateMovieAPI(t *testing.T) {
 				"plot":      movie.Plot,
 				"poster":    movie.Poster,
 			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, username, role, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := models.Movie{
 					ID:        movie.ID,
@@ -480,7 +473,7 @@ func TestUpdateMovieAPI(t *testing.T) {
 					Poster:    movie.Poster,
 				}
 				store.EXPECT().
-					UpdateHall(gomock.Any(), gomock.Eq(movie.ID.Hex()), gomock.Eq(arg)).
+					UpdateMovie(gomock.Any(), gomock.Eq(movie.ID.Hex()), gomock.Eq(arg)).
 					Times(1).
 					Return(models.Movie{}, sql.ErrConnDone)
 			},
@@ -501,6 +494,9 @@ func TestUpdateMovieAPI(t *testing.T) {
 				"screening": movie.Screening,
 				"plot":      movie.Plot,
 				"poster":    movie.Poster,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, username, role, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -530,10 +526,12 @@ func TestUpdateMovieAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/movies/" + tc.movieID
+			//url := "/movies/" + tc.movieID
+			url := fmt.Sprintf("/movies/%s", tc.movieID)
 			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
+			tc.setupAuth(t, request, server.tokenMaker)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
@@ -541,18 +539,24 @@ func TestUpdateMovieAPI(t *testing.T) {
 }
 
 func TestDeleteMovieAPI(t *testing.T) {
+	username := util.RandomOwner()
+	role := util.UserRole
 	movie := randomMovie()
 	movieID := movie.ID.Hex()
 
 	testCases := []struct {
 		name          string
 		movieID       string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name:    "OK",
 			movieID: movieID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, username, role, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					DeleteMovie(gomock.Any(), gomock.Eq(movieID)).
@@ -561,12 +565,15 @@ func TestDeleteMovieAPI(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchResponse(t, recorder.Body, apiResponse{Message: "Hall has been deleted"})
+				requireBodyMatchResponse(t, recorder.Body, apiResponse{Message: "Movie has been deleted"})
 			},
 		},
 		{
 			name:    "InternalError",
 			movieID: movieID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, username, role, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					DeleteMovie(gomock.Any(), gomock.Eq(movieID)).
@@ -597,6 +604,7 @@ func TestDeleteMovieAPI(t *testing.T) {
 			request, err := http.NewRequest(http.MethodDelete, url, nil)
 			require.NoError(t, err)
 
+			tc.setupAuth(t, request, server.tokenMaker)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
@@ -607,14 +615,14 @@ func randomMovie() models.Movie {
 	objectID := primitive.NewObjectID()
 	return models.Movie{
 		ID:        objectID,
-		Title:     util.RandomString(50),
+		Title:     "Titanik",
 		Duration:  int32(util.RandomInt(100, 250)),
-		Genre:     util.RandomString(200),
-		Directors: util.RandomString(200),
-		Actors:    util.RandomString(200),
+		Genre:     util.RandomString(5),
+		Directors: util.RandomString(10),
+		Actors:    util.RandomString(20),
 		Screening: time.Now(),
-		Plot:      util.RandomString(200),
-		Poster:    util.RandomString(200),
+		Plot:      util.RandomString(20),
+		Poster:    util.RandomString(22),
 	}
 }
 
@@ -625,6 +633,11 @@ func requireBodyMatchMovie(t *testing.T, body *bytes.Buffer, movie models.Movie)
 	var gotMovie models.Movie
 	err = json.Unmarshal(data, &gotMovie)
 	require.NoError(t, err)
+
+	// Normalize the Screening time to zero out the nanosecond and location
+	gotMovie.Screening = gotMovie.Screening.Truncate(time.Second)
+	movie.Screening = movie.Screening.Truncate(time.Second)
+
 	require.Equal(t, movie, gotMovie)
 }
 

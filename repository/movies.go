@@ -72,7 +72,7 @@ func (r *MongoStore) GetMovie(ctx context.Context, id string) (*models.Movie, er
 }
 
 // UpdateMovie updates a movie by ID in the MongoDB collection
-func (r *MongoStore) UpdateMovie(ctx context.Context, id string, movie models.Movie) (*models.Movie, error) {
+func (r *MongoStore) UpdateMovie(ctx context.Context, id string, movie *models.Movie) (*models.Movie, error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func (r *MongoStore) UpdateMovie(ctx context.Context, id string, movie models.Mo
 	}
 	movie.ID = objID
 
-	return &movie, nil
+	return movie, nil
 }
 
 // DeleteMovie deletes a movie by ID from the MongoDB collection

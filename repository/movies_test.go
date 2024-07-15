@@ -84,7 +84,7 @@ func TestGetMovie(t *testing.T) {
 func TestUpdateMovie(t *testing.T) {
 	movie1 := createRandomMovie(t)
 
-	arg := models.Movie{
+	arg := &models.Movie{
 		Title:     util.RandomString(50),
 		Duration:  movie1.Duration,
 		Genre:     movie1.Genre,

@@ -55,6 +55,36 @@ func TestGetHallByIDAPI(t *testing.T) {
 			},
 		},
 		{
+			name:   "UnauthorizedUser",
+			hallID: hall.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, "unauthorized_user", role, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					GetHallById(gomock.Any(), gomock.Eq(hall.ID.Hex())).
+					Times(1).
+					Return(&hall, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name:   "NoAuthorization",
+			hallID: hall.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					GetHallById(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
 			name:   "NotFound",
 			hallID: hall.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -142,7 +172,7 @@ func TestListHallsAPI(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				//requireBodyMatchHalls(t, recorder.Body, halls)
+				requireBodyMatchHalls(t, recorder.Body, halls)
 			},
 		},
 		{
@@ -206,8 +236,8 @@ func TestListHallsAPI(t *testing.T) {
 func TestSearchHallsAPI(t *testing.T) {
 	username := util.RandomOwner()
 	role := util.UserRole
-	halls := make([]models.Hall, 1)
-	halls[0] = randomHall()
+	hall := randomHall()
+	halls := []models.Hall{hall}
 
 	testCases := []struct {
 		name          string
@@ -223,7 +253,7 @@ func TestSearchHallsAPI(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 
 				store.EXPECT().
-					GetHall(gomock.Any(), gomock.Eq(halls[0].Name)).
+					GetHall(gomock.Any(), gomock.Eq(hall.Name)).
 					Times(1).
 					Return(halls, nil)
 			},
@@ -275,7 +305,8 @@ func TestSearchHallsAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
-			url := "/searchhalls/:name"
+			url := fmt.Sprintf("/searchhalls/%s", hall.Name)
+
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -326,6 +357,24 @@ func TestInsertHallAPI(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
 				requireBodyMatchHall(t, recorder.Body, hall)
+			},
+		},
+		{
+			name: "NoAuthorization",
+			body: gin.H{
+				"name": hall.Name,
+				"rows": hall.Rows,
+				"cols": hall.Cols,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					InsertHall(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
 			},
 		},
 		{
@@ -440,6 +489,27 @@ func TestUpdateHallAPI(t *testing.T) {
 			},
 		},
 		{
+			name:   "NoAuthorization",
+			hallID: hall.ID.Hex(),
+			body: gin.H{
+				"id":   hall.ID.Hex(),
+				"name": hall.Name,
+				"rows": hall.Rows,
+				"cols": hall.Cols,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				// Do not set up authorization
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					UpdateHall(gomock.Any(), gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
 			name:   "InternalError",
 			hallID: hall.ID.Hex(),
 			body: gin.H{
@@ -546,6 +616,21 @@ func TestDeleteHallAPI(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 				requireBodyMatchResponse(t, recorder.Body, apiResponse{Message: "Hall has been deleted"})
+			},
+		},
+		{
+			name:   "NoAuthorization",
+			hallID: hall.ID.Hex(),
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				// Do not set up authorization
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					DeleteHall(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
 			},
 		},
 		{

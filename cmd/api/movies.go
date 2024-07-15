@@ -1,11 +1,13 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tijanadmi/movieginmongoapi/models"
+	"github.com/tijanadmi/movieginmongoapi/repository"
 )
 
 // searchMovies godoc
@@ -16,20 +18,25 @@ import (
 // @Accept  json
 // @Produce  json
 // @Param  id path string true "Movie ID"
-// @Success 200 {array} models.Movie
+// @Success 200  models.Movie
 // @Failure 400 {object} apiErrorResponse
 // @Failure 401 {object} apiErrorResponse
 // @Router /movies/{id} [get]
 func (server *Server) searchMovies(ctx *gin.Context) {
 
 	movieId := ctx.Param("id")
-	movies, err := server.store.SearchMovies(ctx, movieId)
+	movie, err := server.store.GetMovie(ctx, movieId)
 	if err != nil {
+		if errors.Is(err, repository.ErrMovieNotFound) {
+			ctx.JSON(http.StatusNotFound, apiErrorResponse{Error: err.Error()})
+			return
+		}
+
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, movies)
+	ctx.JSON(http.StatusOK, movie)
 }
 
 // listMovies godoc
@@ -103,7 +110,7 @@ func (server *Server) UpdateMovie(ctx *gin.Context) {
 		return
 	}
 
-	modifiedMovie, err := server.store.UpdateMovie(ctx, id, *movie)
+	modifiedMovie, err := server.store.UpdateMovie(ctx, id, movie)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, apiErrorResponse{Error: err.Error()})
 		return
