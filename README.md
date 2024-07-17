@@ -71,7 +71,7 @@ JWT_SECRET=your_jwt_secret
 ```
 5. **Start local MongoDB with replica sets:**
 
-Create folde `data` and 3 subfolders: `rs0-0`, `rs0-1`, `rs0-2`.
+Create folder `data` and 3 subfolders: `rs0-0`, `rs0-1`, `rs0-2`.
 Open separate command prompt windows (or other shells) and run the following commands to start each replica set:
 ```sh
 mongod --port 27017 --dbpath folder_path\data\rs0-0 --replSet rs0
