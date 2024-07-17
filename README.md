@@ -82,7 +82,7 @@ In another command prompt, connect to the first MongoDB instance and initiate th
 ```sh
 mongosh --port 27017
 ```
-Inside the **mongosh shell, run the following commands:
+Inside the `mongosh` shell, run the following commands:
 ```sh
 rs.initiate({
   _id: "rs0",
