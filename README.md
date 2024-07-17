@@ -36,17 +36,101 @@ The backend is developed using the Go programming language (version go1.22.4) wi
 -	Git
 
 ### Installation
+
 1.	Clone the repository:
+
 ```sh
 git clone https://github.com/yourusername/movietheater-backend.git
 cd movietheater-backend
 ```
+
 2. Install dependencies:
+
 ```sh
 go mod download
 ```
+
 3. Install MongoDB
    
     Instructions for installation are https://www.mongodb.com/docs/manual/installation/
 
 4. Set up environment variables
+
+    Create a .env file in the root directory of the project and add the necessary configuration variables.
+
+```sh
+TOKEN_SYMMETRIC_KEY=your_jwt_secret
+ACCESS_TOKEN_DURATION=15m
+REFRESH_TOKEN_DURATION=24h
+HTTP_SERVER_ADDRESS=0.0.0.0:8080
+MONGO_URL=mongodb://localhost:27017
+USERNAME=db_username
+PASSWORD=db_password
+DATABASE=db_name
+JWT_SECRET=your_jwt_secret
+```
+5. Start local MongoDB with replica sets:
+
+    Create folde "data" and 3 subfolders: "rs0-0", "rs0-1", "rs0-2".
+    Open separate command prompt windows (or other shells) and run the following commands to start each replica set:
+
+```sh
+mongod --port 27017 --dbpath folder_path\data\rs0-0 --replSet rs0
+mongod --port 27018 --dbpath folder_path\data\rs0-1 --replSet rs0
+mongod --port 27019 --dbpath folder_path\data\rs0-2 --replSet rs0
+```
+    In another command prompt, connect to the first MongoDB instance and initiate the replica set:
+
+```sh
+mongosh --port 27017
+```
+    Inside the mongosh shell, run the following commands:
+
+```sh
+rs.initiate({
+  _id: "rs0",
+  members: [
+    { _id: 0, host: "localhost:27017" }
+  ]
+});
+```
+
+    After initiating the replica set, add the other members:
+
+```sh
+rs.add("localhost:27018");
+rs.add("localhost:27019");
+rs.status();
+```
+
+## Running the Application
+
+1. Start MongoDB:
+
+Ensure MongoDB is running on your local machine with the replica set configured as described above.
+
+2. Run the server:
+
+```sh
+go run main.go
+```
+
+3. Access the API:
+
+The API will be available at http://localhost:8080.
+
+## Running Tests
+
+To run tests, use the following command:
+
+```sh
+go test ./...
+```
+
+This will run all the tests in the project, including unit tests with mocked database interactions.
+
+## API Documentation
+
+Detailed documentation and descriptions of the API endpoints are available at:
+
+http://localhost:8080/swagger/index.html

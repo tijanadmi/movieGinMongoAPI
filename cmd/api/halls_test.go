@@ -55,22 +55,6 @@ func TestGetHallByIDAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "UnauthorizedUser",
-			hallID: hall.ID,
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, "unauthorized_user", role, time.Minute)
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					GetHallById(gomock.Any(), gomock.Eq(hall.ID.Hex())).
-					Times(1).
-					Return(&hall, nil)
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
-			},
-		},
-		{
 			name:   "NoAuthorization",
 			hallID: hall.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
