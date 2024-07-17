@@ -37,24 +37,24 @@ The backend is developed using the Go programming language (version go1.22.4) wi
 
 ### Installation
 
-1.	Clone the repository:
+1.	**Clone the repository:**
 
 ```sh
 git clone https://github.com/yourusername/movietheater-backend.git
 cd movietheater-backend
 ```
 
-2. Install dependencies:
+2. **Install dependencies:**
 
 ```sh
 go mod download
 ```
 
-3. Install MongoDB
+3. **Install MongoDB**
    
 Instructions for installation are https://www.mongodb.com/docs/manual/installation/
 
-4. Set up environment variables
+4. **Set up environment variables**
 
 Create a `.env` file in the root directory of the project and add the necessary configuration variables.
 
@@ -69,7 +69,7 @@ PASSWORD=db_password
 DATABASE=db_name
 JWT_SECRET=your_jwt_secret
 ```
-5. Start local MongoDB with replica sets:
+5. **Start local MongoDB with replica sets:**
 
 Create folde `data` and 3 subfolders: `rs0-0`, `rs0-1`, `rs0-2`.
 Open separate command prompt windows (or other shells) and run the following commands to start each replica set:
@@ -100,17 +100,17 @@ rs.status();
 
 ## Running the Application
 
-1. Start MongoDB:
+1. **Start MongoDB:**
 
 Ensure MongoDB is running on your local machine with the replica set configured as described above.
 
-2. Run the server:
+2. **Run the server:**
 
 ```sh
 go run main.go
 ```
 
-3. Access the API:
+3. **Access the API:**
 
 The API will be available at http://localhost:8080.
 
@@ -129,3 +129,7 @@ This will run all the tests in the project, including unit tests with mocked dat
 Detailed documentation and descriptions of the API endpoints are available at:
 
 http://localhost:8080/swagger/index.html
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)
