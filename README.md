@@ -131,7 +131,8 @@ http://localhost:8080/swagger/index.html
 
 ## QR Code for GitHub Repository
 
-![QR Code](frame.png)
+<img src="frame.png.png" alt="QR Code" width="200">
+
 
 ## License
 
