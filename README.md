@@ -37,26 +37,26 @@ The backend is developed using the Go programming language (version go1.22.4) wi
 
 ### Installation
 
-1.	Clone the repository:
+1.	**Clone the repository:
 
 ```sh
 git clone https://github.com/yourusername/movietheater-backend.git
 cd movietheater-backend
 ```
 
-2. Install dependencies:
+2. **Install dependencies:
 
 ```sh
 go mod download
 ```
 
-3. Install MongoDB
+3. **Install MongoDB
    
-    Instructions for installation are https://www.mongodb.com/docs/manual/installation/
+Instructions for installation are https://www.mongodb.com/docs/manual/installation/
 
-4. Set up environment variables
+4. **Set up environment variables
 
-    Create a .env file in the root directory of the project and add the necessary configuration variables.
+Create a **.env file in the root directory of the project and add the necessary configuration variables.
 
 ```sh
 TOKEN_SYMMETRIC_KEY=your_jwt_secret
@@ -69,10 +69,10 @@ PASSWORD=db_password
 DATABASE=db_name
 JWT_SECRET=your_jwt_secret
 ```
-5. Start local MongoDB with replica sets:
+5. **Start local MongoDB with replica sets:
 
-    Create folde "data" and 3 subfolders: "rs0-0", "rs0-1", "rs0-2".
-    Open separate command prompt windows (or other shells) and run the following commands to start each replica set:
+Create folde **data and 3 subfolders: **rs0-0, **rs0-1, **rs0-2.
+Open separate command prompt windows (or other shells) and run the following commands to start each replica set:
 
 ```sh
 mongod --port 27017 --dbpath folder_path\data\rs0-0 --replSet rs0
@@ -84,7 +84,8 @@ mongod --port 27019 --dbpath folder_path\data\rs0-2 --replSet rs0
 ```sh
 mongosh --port 27017
 ```
-    Inside the mongosh shell, run the following commands:
+
+Inside the **mongosh shell, run the following commands:
 
 ```sh
 rs.initiate({
@@ -95,7 +96,7 @@ rs.initiate({
 });
 ```
 
-    After initiating the replica set, add the other members:
+After initiating the replica set, add the other members:
 
 ```sh
 rs.add("localhost:27018");
@@ -105,17 +106,17 @@ rs.status();
 
 ## Running the Application
 
-1. Start MongoDB:
+1. **Start MongoDB:
 
 Ensure MongoDB is running on your local machine with the replica set configured as described above.
 
-2. Run the server:
+2. **Run the server:
 
 ```sh
 go run main.go
 ```
 
-3. Access the API:
+3. **Access the API:
 
 The API will be available at http://localhost:8080.
 
