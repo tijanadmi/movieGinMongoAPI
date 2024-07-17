@@ -129,6 +129,10 @@ Detailed documentation and descriptions of the API endpoints are available at:
 
 http://localhost:8080/swagger/index.html
 
+## QR Code for GitHub Repository
+
+![QR Code](frame.png)
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
