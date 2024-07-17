@@ -111,7 +111,7 @@ go run main.go
 
 3. **Access the API:**
 
-The API will be available at http://localhost:8080.
+The API will be available at http://localhost:8080
 
 ## Running Tests
 
