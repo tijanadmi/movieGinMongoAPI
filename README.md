@@ -87,6 +87,11 @@ rs.add("localhost:27018");
 rs.add("localhost:27019");
 rs.status();
 ```
+
+## Running the Application
+
+1. **Start MongoDB:**
+
 Open separate command prompt windows (or other shells) and run the following commands to start each replica set:
 ```sh
 mongod --port 27017 --dbpath folder_path\data\rs0-0 --replSet rs0
@@ -97,12 +102,6 @@ In another command prompt, connect to the first MongoDB instance and initiate th
 ```sh
 mongosh --port 27017
 ```
-
-## Running the Application
-
-1. **Start MongoDB:**
-
-Ensure MongoDB is running on your local machine with the replica set configured as described above.
 
 2. **Run the server:**
 
